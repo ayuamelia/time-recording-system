@@ -24,7 +24,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
- * Use this after `authenticate` to restrict a route to admins only.
+ * Restricts access to users with the 'admin' role
  */
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role !== 'admin') {

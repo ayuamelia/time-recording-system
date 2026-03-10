@@ -17,18 +17,5 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  # Optional: run the API in Docker too
-  # api:
-  #   build: .
-  #   ports:
-  #     - '3000:3000'
-  #   environment:
-  #     DATABASE_URL: postgresql://postgres:password@postgres:5432/time_recording
-  #     APP_TIMEZONE: Asia/Singapore
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-
 volumes:
   pgdata:
