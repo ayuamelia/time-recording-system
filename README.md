@@ -322,24 +322,30 @@ RateLimit-Reset: 1710000000
 
 ## Running Tests
 
-The test suite uses **Jest** + **Supertest** against a dedicated test database.
+### Prerequisites
 
-### 1. Apply migrations to the test database
+Ensure `TEST_DATABASE_URL` is set in your `.env` file pointing to a separate database:
+```
+TEST_DATABASE_URL=postgresql://postgres:password@localhost:5432/time_recording_test
+```
+
+### 1. Migrate the test database
+
+Run this once (and again whenever you add new Prisma migrations):
 ```bash
 npm run db:migrate:test
 ```
 
-### 3. Run the tests
+This script will create the test database if it doesn't exist, then apply all migrations to it.
+
+### 2. Run the test suite
 ```bash
-# Run all tests once
-npm test
-
-# Watch mode (re-runs on file save)
-npm run test:watch
-
-# With coverage report
-npm run test:coverage
+npm test                 # run all tests once
+npm run test:watch       # watch mode
+npm run test:coverage    # with coverage report
 ```
+
+> **Note:** Tests use a separate database (`time_recording_test`).
 
 ### Test coverage
 
