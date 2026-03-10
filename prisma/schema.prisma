@@ -1,0 +1,65 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         String       @default("employee") // "admin" | "employee"
+  timeRecords  TimeRecord[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("users")
+}
+
+// Represents one clock-in / clock-out session for a user
+model TimeRecord {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clockIn         DateTime
+  clockOut        DateTime?
+  date            DateTime  @db.Date       // local date of the session (derived from clockIn)
+  workedMinutes   Int?                     // computed when clocked out
+  overtimeMinutes Int?                     // computed when clocked out
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@map("time_records")
+}
+
+// Overrides for specific calendar dates (e.g., public holidays)
+model WorkCalendarOverride {
+  id           String   @id @default(uuid())
+  date         DateTime @unique @db.Date
+  isWorkingDay Boolean  @default(false)  // false = holiday / non-working day override
+  description  String?
+  createdAt    DateTime @default(now())
+
+  @@map("work_calendar_overrides")
+}
+
+// Global work configuration (single active row strategy)
+model WorkConfig {
+  id                   String   @id @default(uuid())
+  normalHoursPerDay    Int      @default(8)              // normal hours per working day
+  workingDaysOfWeek    String   @default("[1,2,3,4,5]")  // JSON: 0=Sun,1=Mon,...,6=Sat
+  effectiveFrom        DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("work_config")
+}
