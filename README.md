@@ -1,6 +1,6 @@
 # ⏱ Time Recording System
 
-A RESTful API for recording employee work hours, managing work calendars, and generating reports — built with **TypeScript**, **Express**, **Prisma ORM**, and **PostgreSQL**.
+A RESTful API for recording employee work hours, managing work calendars, and generating reports — built with **TypeScript**, **Express**, **Prisma ORM**, and **PostgreSQL**. Includes a React frontend for end-to-end usability demonstration.
 
 ---
 
@@ -13,6 +13,7 @@ A RESTful API for recording employee work hours, managing work calendars, and ge
 - [Setup Instructions](#setup-instructions)
 - [Database Schema](#database-schema)
 - [Running the Application](#running-the-application)
+- [Frontend](#frontend)
 - [Authentication](#authentication)
 - [Rate Limiting](#rate-limiting)
 - [Running Tests](#running-tests)
@@ -35,6 +36,7 @@ A RESTful API for recording employee work hours, managing work calendars, and ge
 | **Role-Based Access** | `admin` role required for config and calendar override mutations |
 | **Rate Limiting** | Brute-force protection on login; general throttle on all routes |
 | **Test Suite** | Integration tests covering auth, clock logic, CRUD, reports, and concurrency |
+| **Frontend UI** | React interface demonstrating the full end-to-end user flow |
 
 ---
 
@@ -53,6 +55,7 @@ A RESTful API for recording employee work hours, managing work calendars, and ge
 | Rate limiting | `express-rate-limit` |
 | API Docs | OpenAPI 3.0 + `swagger-ui-express` |
 | Testing | Jest + `ts-jest` + Supertest |
+| Frontend | React 18 + Vite 5 |
 
 ---
 
@@ -99,6 +102,13 @@ src/
 │   └── reports.test.ts      
 ├── app.ts                   
 └── server.ts               
+
+frontend/
+├── src/
+│   └── App.jsx             
+├── index.html
+├── vite.config.js
+└── package.json
 ```
 
 ---
@@ -131,7 +141,7 @@ src/
 
 ### Prerequisites
 
-- Node.js v18+
+- Node.js v20.19+ or v22+
 - PostgreSQL 16 (or Docker)
 - npm
 
@@ -159,6 +169,10 @@ DATABASE_URL="postgresql://postgres:password@localhost:5432/time_recording"
 PORT=3000
 NODE_ENV=development
 APP_TIMEZONE=Asia/Singapore   # IANA timezone
+
+# JWT
+JWT_SECRET=a73d6dde-cef2-4418-b831-b36d3598c121
+JWT_EXPIRES_IN=8h
 
 # Test database (separate DB so tests never touch dev data)
 TEST_DATABASE_URL="postgresql://postgres:password@localhost:5432/time_recording_test"
@@ -238,6 +252,70 @@ npm start
 ```
 
 The API is available at `http://localhost:3000/api/v1`.
+
+---
+
+## Frontend
+
+The frontend is a single-file React application (`frontend/src/App.jsx`) that demonstrates the full end-to-end user flow against the live API.
+
+### Pages
+
+| Page | Available to | Description |
+|---|---|---|
+| **Dashboard** | All users | Clock in/out with live elapsed timer, 30-day summary stats, paginated time records |
+| **Reports** | All users | Generate a date-range report with daily breakdown and bar chart; admins can select any employee |
+| **Admin** | Admin only | Manage work config, calendar overrides, and users |
+
+### Dashboard features
+
+The clock widget shows a live `HH:MM:SS` elapsed timer once the user clocks in. The timer turns amber when the session exceeds 8 hours, with an "Overtime running" indicator. The 30-day summary cards pull from the `/reports` endpoint and update automatically after each clock event.
+
+### Admin panel tabs
+
+The Admin page is only visible in the sidebar when the logged-in user has the `admin` role. It contains three tabs, each backed by real API calls: Work Config (edit daily hours and toggle working days), Calendar Overrides (add/remove holidays and forced working days), and Users (list, create, delete).
+
+### Setup
+
+> **Requires Node.js v20.19+ or v22+.** Vite 5 is used to avoid the Node 20.19+ requirement of Vite 6.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend runs at `http://localhost:5173` and proxies API calls to `http://localhost:3000`.
+
+### CORS
+
+If the browser blocks requests to the API, add CORS support to the backend:
+
+```bash
+npm install cors
+npm install -D @types/cors
+```
+
+Then in `src/app.ts`:
+
+```typescript
+import cors from 'cors';
+app.use(cors({ origin: 'http://localhost:5173' }));
+```
+
+### Running both servers together
+
+Open two terminal windows:
+
+```bash
+# Terminal 1 — backend
+npm run dev
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+Then open `http://localhost:5173` and log in with any seeded user.
 
 ---
 

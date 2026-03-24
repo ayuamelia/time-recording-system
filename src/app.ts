@@ -4,9 +4,11 @@ import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import { createSwaggerRouter } from './config/swagger';
 import { apiLimiter } from './middleware/rateLimiter';
+import cors from 'cors';
 
 const app = express();
 
+app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1', apiLimiter); 
